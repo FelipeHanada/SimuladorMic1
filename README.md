@@ -2,8 +2,7 @@
 Este simulador foi feito como trabalho da disciplina de Arquitetura de Computadores (TCC00286) da turma A1 ministrada por Vinod Rabello no primeiro semestre de 2025.
 Esta aplicação simula o funcionamento de uma implementação de uma arquitetura proposta por Andrew S. Tanenbaum em "Organização Estruturada de Computadores".
 Ele conta com um montador de código, tabelas de registradores e memória principal, rastreadores de instrução e microinstrução, e um diagrama dinâmico dos barramentos e componentes elétricos da microarquitetura.
-
-O desenvolvimento desta aplicação foi realizado com a contribuição de [Diogo Gouveia](https://github.com/gouveiadiogo)
+O desenvolvimento desta aplicação foi realizado com a contribuição de [Diogo Gouveia](https://github.com/gouveiadiogo) e [Danilo Simonelli](https://github.com/danilosimonelli).
 
 
 # O Montador
