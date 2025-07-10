@@ -5,10 +5,9 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<div class="mb-1 d-flex align-items-start" style="max-height: 300px; overflow: auto;">
+<div class="mb-1 d-flex align-items-start" style="max-height: 300px; overflow: hidden;">
     <div class="overflow-hidden" id="@LineNumbersId">1</div>
-    <textarea class="overflow-auto" id="@TextAreaId" placeholder="Digite o programa aqui..."
-    rows="18" cols="42"></textarea>
+    <textarea class="overflow-auto" style="resize: none;" id="@TextAreaId" placeholder="Digite o programa aqui..." rows="12" cols="42"></textarea>
 </div>
 
 <div id="program-buttons">
