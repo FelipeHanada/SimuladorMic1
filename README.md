@@ -76,3 +76,8 @@ O Simulador é foi construido em três projetos C#:
 - - Contém um arquivo chamado "control_store.txt" que carrega a memória de controle. É possível alterá-lo para testar programas novos, mas pode causar erros indesejáveis.
 - "SimuladorTestes": Pacote com testes relacionados ao pacote "Simulador";
 - e "SimuladorApp": Aplicação gráfica.
+
+# Como Usar?
+- Clone o repositório e compile o projeto.
+- Ou baixe o projeto compilado em: <https://drive.google.com/file/d/1QzledLUGP9qD8kSGOPwESX1yGQ3WJl7-/view?usp=sharing> e execute o arquivo SimuladorApp.exe
+* o arquivo "control_store.txt" pode ser encontrado dentro de uma pasta chamada "mic1".
