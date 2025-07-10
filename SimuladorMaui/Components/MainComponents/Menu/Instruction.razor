@@ -1,0 +1,126 @@
+﻿@using System.Collections;
+@using SimuladorApp.Components.Store;
+@using Simulador.components;
+@using Simulador.mic1;
+@using Simulador.utils;
+
+<div class="card p-2 mb-1 font-monospace">
+    <h6 class="mb-2">Macro-Instrução Atual</h6>
+    <div><strong>Endereço (PC):</strong> <span id="macro-current-pc">@(mic1.Registers[0].Out.Signal().ToBitString())</span></div>
+    <div><strong>Mnemônico:</strong> <span id="macro-current-opcode">@currentMnemonic</span></div>
+    <div><strong>Operando:</strong> <span id="macro-current-param">@currentParam</span></div>
+    <div><span id="macro-current-bin">@(currentInstructionBits)</span></div>
+</div>
+
+<div class="card p-2 mb-1 font-monospace">
+    <h6 class="mb-2">Micro-Instrução Atual</h6>
+    <div><strong>Endereço (&mu;PC):</strong> <span id="micro-current-pc">@(mic1.ControlUnit.MPc.Out.Signal().ToBitString())</span></div>
+    <div>
+        <span id="micro-current-bin">@(mic1.Mir.Out.Signal().ToBitString())</span>
+    </div>
+</div>
+
+<div class="card p-2 mb-1 font-monospace">
+    <h6 class="mb-2">Subciclo Atual</h6>
+    <div><strong>nº</strong> <span id="current-pc">@(1 + mic1.Clock.CurrentCycle() + "/4")</span></div>
+</div>
+
+@code {
+    private Mic1 mic1 = Mic1Store.Instance.Mic1;
+    private string currentMnemonic = "";
+    private string currentParam = "";
+    private string currentInstructionBits = "";
+
+    private Dictionary<string, string> op_codes = new Dictionary<string, string>
+    {
+        {"0000", "LODD"},
+        {"0001", "STOD"},
+        {"0010", "ADDD"},
+        {"0011", "SUBD"},
+        {"0100", "JPOS"},
+        {"0101", "JZER"},
+        {"0110", "JUMP"},
+        {"0111", "LOCO"},
+        {"1000", "LODL"},
+        {"1001", "STOL"},
+        {"1010", "ADDL"},
+        {"1011", "SUBL"},
+        {"1100", "JNEG"},
+        {"1101", "JNZE"},
+        {"1110", "CALL"},
+        {"1111000000000000", "PSHI"},
+        {"1111001000000000", "POPI"},
+        {"1111010000000000", "PUSH"},
+        {"1111011000000000", "POP"},
+        {"1111100000000000", "RETN"},
+        {"1111101000000000", "SWAP"},
+        {"11111100", "INSP"},
+        {"11111110", "DESP"},
+    };
+
+    private void DecodeCurrentInstruction()
+    {
+        int pc = mic1.Registers[0].Out.Signal().ToInt32();
+        BitArray irBits = mic1.MP.Cell(pc);
+        currentInstructionBits = irBits.ToBitString();
+
+        if (op_codes.TryGetValue(currentInstructionBits, out string mnemonic))
+        {
+            currentMnemonic = mnemonic;
+            currentParam = "";
+            return;
+        }
+
+        string first8 = currentInstructionBits.Substring(0, 8);
+        if (op_codes.TryGetValue(first8, out mnemonic))
+        {
+            currentMnemonic = mnemonic;
+            string paramBits = currentInstructionBits.Substring(8, 8);
+            currentParam = Convert.ToInt32(paramBits, 2).ToString();
+            return;
+        }
+
+        string first4 = currentInstructionBits.Substring(0, 4);
+        if (op_codes.TryGetValue(first4, out mnemonic))
+        {
+            currentMnemonic = mnemonic;
+            string paramBits = currentInstructionBits.Substring(4, 12);
+            currentParam = Convert.ToInt32(paramBits, 2).ToString();
+            return;
+        }
+
+        currentMnemonic = "???";
+        currentParam = currentInstructionBits;
+    }
+
+    protected override void OnInitialized()
+    {
+        mic1.Registers[0].DataChanged += OnChange;
+        mic1.Registers[1].DataChanged += OnChange;
+        mic1.Mir.DataChanged += OnChange;
+        mic1.Clock.Stepped += OnChange;
+        DecodeCurrentInstruction();
+
+        mic1.MP.CellChanged += (object? _, int cell) =>
+        {
+            if (cell == mic1.Registers[0].Out.Signal().ToInt32())
+                OnChange(null, null);
+        };
+
+        mic1.Resetted += OnChange;
+    }
+
+    public void OnChange(object? _, object __)
+    {
+        DecodeCurrentInstruction();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        mic1.Registers[0].DataChanged -= OnChange;
+        mic1.Registers[1].DataChanged -= OnChange;
+        mic1.Mir.DataChanged -= OnChange;
+        mic1.Clock.Stepped -= OnChange;
+    }
+}

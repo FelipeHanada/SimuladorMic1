@@ -1,0 +1,95 @@
+﻿@using SimuladorApp.Components.MainComponents.Diagram.Shapes
+
+<g class="component @(isActive ? "active" : "")">
+    @switch(shape)
+    {
+        case ComponentShape.Rect:
+            <Rect x="@displayData!.X" y="@displayData!.Y" width="@displayData!.Width" height="@displayData!.Height" />
+            break;
+
+        case ComponentShape.Alu:
+            <Alu x="@displayData!.X" y="@displayData!.Y" width="@displayData!.Width" height="@displayData!.Height" />
+            break;
+    }
+
+    @if(showLabel)
+    {
+        @((MarkupString)$"<text x='{displayData!.X + displayData!.Width / 2}' y='{displayData!.Y + displayData!.Height / 2}' text-anchor='middle' dominant-baseline='middle'>{label}</text>")
+
+        @* <text x="@(@displayData?.X + @displayData?.Width / 2)" y="@(@displayData?.Y + @displayData?.Height / 2)" text-anchor="middle" dominant-baseline="middle">@label</text> *@
+    }
+    
+    @if(hoverContent) {
+        <title>@label: @binaryContent (@decimalContent)</title>
+    }
+</g>  
+
+@code {
+    public int decimalContent = 0;  
+    public string binaryContent = "?";
+    private bool isActive = false;
+
+    [Parameter]
+    public DiagramDisplayData? displayData { get; set; } = null;
+
+    [Parameter]  
+    public int x { get; set; }
+
+    [Parameter]
+    public int y { get; set; }
+
+    [Parameter]
+    public int width { get; set; }
+
+    [Parameter]  
+    public int height { get; set; }
+
+    [Parameter]
+    public ComponentShape shape { get; set; } = ComponentShape.Rect;
+
+    [Parameter]  
+    public string label { get; set; } = "";
+
+    [Parameter]
+    public bool showLabel { get; set; } = true;
+
+    [Parameter]
+    public int contentLength { get; set; } = 8;
+
+    [Parameter]
+    public bool hoverContent { get; set; } = true;
+
+    public override Task SetParametersAsync(ParameterView parameters)  
+    {  
+        if (displayData is null)
+        {
+            displayData = new(x, y, width, height);
+        }
+
+        int length;
+        if (parameters.TryGetValue("contentLength", out length))
+        {
+            this.binaryContent = new string('0', length);
+        }
+
+        return base.SetParametersAsync(parameters);  
+    }  
+
+    public void SetDecimalContent(int content)  
+    {  
+        decimalContent = content;
+        InvokeAsync(StateHasChanged);
+    }  
+
+    public void SetBinaryContent(string content)  
+    {  
+        binaryContent = content;  
+        InvokeAsync(StateHasChanged);
+    }  
+
+    public void SetActive(bool active = true)  
+    {  
+        isActive = active;
+        InvokeAsync(StateHasChanged);
+    }  
+}

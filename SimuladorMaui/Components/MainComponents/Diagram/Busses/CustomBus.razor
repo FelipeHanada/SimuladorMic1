@@ -1,0 +1,33 @@
+@foreach (var segment in Segments)
+{
+    <line x1="@segment.x1" y1="@segment.y1"
+          x2="@segment.x2" y2="@segment.y2"
+          stroke="@stroke" stroke-width="2" />
+}
+
+@code {
+    [Parameter] public int x1 { get; set; }
+    [Parameter] public int y1 { get; set; }
+    [Parameter] public int x2 { get; set; }
+    [Parameter] public int y2 { get; set; }
+    [Parameter] public List<(int x, int y)> Waypoints { get; set; } = new();
+    [Parameter] public string stroke { get; set; } = "black";
+
+    private List<(int x1, int y1, int x2, int y2)> Segments = new();
+
+    protected override void OnParametersSet()
+    {
+        Segments.Clear();
+
+        var points = new List<(int x, int y)> { (x1, y1) };
+        points.AddRange(Waypoints);
+        points.Add((x2, y2));
+
+        for (int i = 0; i < points.Count - 1; i++)
+        {
+            var p1 = points[i];
+            var p2 = points[i + 1];
+            Segments.Add((p1.x, p1.y, p2.x, p2.y));
+        }
+    }
+}

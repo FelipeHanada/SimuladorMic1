@@ -1,0 +1,123 @@
+﻿@using System.Collections;
+@using SimuladorApp.Components.Store;
+@using Simulador.components;
+@using Simulador.mic1;
+@using Simulador.utils;
+
+<div class="d-flex flex-column h-100 overflow-auto font-monospace">
+    <h5>REG</h5>
+    <table class="w-100" id="reg-table">
+        <thead>
+            <tr>
+                <th>Registrador</th>
+                <th>BIN</th>
+                <th>DEC</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PC</td>
+                <td>@(mic1.Registers[0].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[0].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>AC</td>
+                <td>@(mic1.Registers[1].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[1].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>SP</td>
+                <td>@(mic1.Registers[2].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[2].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>IR</td>
+                <td>@(mic1.Registers[3].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[3].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>TIR</td>
+                <td>@(mic1.Registers[4].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[4].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>@(mic1.Registers[5].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[5].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>+1</td>
+                <td>@(mic1.Registers[6].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[6].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>-1</td>
+                <td>@(mic1.Registers[7].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[7].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>AM</td>
+                <td>@(mic1.Registers[8].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[8].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>SM</td>
+                <td>@(mic1.Registers[9].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[9].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>A</td>
+                <td>@(mic1.Registers[10].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[10].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>B</td>
+                <td>@(mic1.Registers[11].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[11].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>C</td>
+                <td>@(mic1.Registers[12].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[12].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>D</td>
+                <td>@(mic1.Registers[13].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[13].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>E</td>
+                <td>@(mic1.Registers[14].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[14].Out.Signal().ToInt32())</td>
+            </tr>
+            <tr>
+                <td>F</td>
+                <td>@(mic1.Registers[15].Out.Signal().ToBitString())</td>
+                <td>@(mic1.Registers[15].Out.Signal().ToInt32())</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private Mic1 mic1 = Mic1Store.Instance.Mic1;
+
+    protected override void OnInitialized()
+    {
+        foreach (var reg in mic1.Registers) {
+            reg.DataChanged += OnChange;
+        }
+    }
+
+    public void OnChange(object? _, object __)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        foreach (var reg in mic1.Registers) {
+            reg.DataChanged -= OnChange;
+        }
+    }
+}

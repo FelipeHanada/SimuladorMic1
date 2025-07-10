@@ -1,0 +1,19 @@
+﻿@if (!rotated)
+{
+    <line x1="@x1" y1="@y1" x2="@x2" y2="@y1" stroke="@stroke" stroke-width="2" />
+    <line x1="@x2" y1="@y1" x2="@x2" y2="@y2" stroke="@stroke" stroke-width="2" />
+}
+else
+{
+    <line x1="@x1" y1="@y1" x2="@x1" y2="@y2" stroke="@stroke" stroke-width="2" />
+    <line x1="@x1" y1="@y2" x2="@x2" y2="@y2" stroke="@stroke" stroke-width="2" />
+}
+
+@code {
+    [Parameter] public int x1 { get; set; }
+    [Parameter] public int y1 { get; set; }
+    [Parameter] public int x2 { get; set; }
+    [Parameter] public int y2 { get; set; }
+    [Parameter] public bool rotated { get; set; } = false;
+    [Parameter] public string stroke { get; set; } = "black";
+}

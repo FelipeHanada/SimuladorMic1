@@ -1,0 +1,98 @@
+﻿@using SimuladorApp.Components.Store;
+@using Simulador.mic1;
+@using Simulador.mic1.exceptions;
+
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="mb-1 d-flex align-items-start" style="max-height: 300px; overflow: auto;">
+    <div class="overflow-hidden" id="@LineNumbersId">1</div>
+    <textarea class="overflow-auto" id="@TextAreaId" placeholder="Digite o programa aqui..."
+    rows="18" cols="42"></textarea>
+</div>
+
+<div id="program-buttons">
+    <button type="button" @onclick="LoadProgram" class="btn btn-outline-secondary btn-sm px-2">
+        Carregar na Memória
+    </button>
+</div>
+
+
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Erro de Montagem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="errorMessage">
+        <!-- Error will appear here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+@code {
+    private DotNetObjectReference<ProgramInput>? objRef;
+    private IJSObjectReference? module;
+    private const string LineNumbersId = "line-numbers";
+    private const string TextAreaId = "program-input";
+
+    private readonly Mic1 mic1= Mic1Store.Instance.Mic1;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/programInput.js");
+
+            await module.InvokeVoidAsync("initializeProgramInput", TextAreaId, LineNumbersId);
+        }
+    }
+
+    private async Task LoadProgram()
+    {
+        if (module != null)
+        {
+            string assemblyCode = await module.InvokeAsync<string>("getProgramInputContent", TextAreaId);
+            mic1.Reset();
+
+            try
+            {
+                AssemblerV2.Assemble(mic1.MP, assemblyCode);
+                // Assembler.Assemble(mic1.MP, program);
+            } catch (SyntaxErrorException exception)
+            {
+                if (module is not null)
+                    await module.InvokeVoidAsync("showErrorModal", "syntax_error", exception.LineNumber);
+            } catch (DuplicattedSymbolException exception)
+            {
+                if (module is not null)
+                    await module.InvokeVoidAsync("showErrorModal", "duplicatted_symbol", exception.LineNumber, exception.Symbol);
+            } catch (SymbolNotDefinedException exception)
+            {
+                if (module is not null)
+                    await module.InvokeVoidAsync("showErrorModal", "symbol_not_defined", exception.LineNumber, exception.Symbol);
+            } catch (OpCodeNotDefinedException exception)
+            {
+                if (module is not null)
+                    await module.InvokeVoidAsync("showErrorModal", "opcode_not_defined", exception.LineNumber, exception.OpCode);
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+
+        objRef?.Dispose();
+    }
+}

@@ -1,0 +1,28 @@
+﻿<polygon points="@PolygonPoints" />
+
+@code {
+    [Parameter]
+    public int x { get; set; }
+
+    [Parameter]
+    public int y { get; set; }
+
+    [Parameter]
+    public int width { get; set; }
+
+    [Parameter]
+    public int height { get; set; }
+
+    private string PolygonPoints => string.Join(" ",
+        new[]
+        {
+            $"{x},{y}",
+            $"{x + width / 3},{y}",
+            $"{x + width / 2},{y + height / 2}",
+            $"{x + (2 * width) / 3},{y}",
+            $"{x + width},{y}",
+            $"{x + (2 * width) / 3},{y + height}",
+            $"{x + width / 3},{y + height}"
+        }
+    );
+}

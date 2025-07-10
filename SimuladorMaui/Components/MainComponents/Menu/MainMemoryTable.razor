@@ -1,0 +1,59 @@
+﻿@using SimuladorApp.Components.Store;
+@using Simulador.components;
+@using Simulador.utils;
+
+<div class="d-flex flex-column h-100 overflow-auto font-monospace">
+    <h5>MP</h5>
+    <table class="w-100" id="mem-table">
+        <thead>
+            <tr>
+                <th>nº</th>
+                <th>BIN</th>
+                <th>DEC</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < CellCount; i++)
+            {
+                var bin = mic1Store.Mic1.MP.Cell(i);
+                <tr>
+                    <td>@i</td>
+                    <td>@bin.ToBitString()</td>
+                    <td>@bin.ToInt32()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public int CellCount { get; set; }
+
+    [Parameter]
+    public int BinLength { get; set; }
+
+    private Mic1Store mic1Store = Mic1Store.Instance;
+
+    protected override void OnInitialized()
+    {
+        mic1Store.Mic1.MP.CellChanged += OnCellChanged;
+        mic1Store.Mic1.MP.Resetted += OnReset;
+    }
+
+    private void OnCellChanged(object? _, int __)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnReset(object? _, EventArgs __)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        mic1Store.Mic1.MP.CellChanged -= OnCellChanged;
+        mic1Store.Mic1.MP.Resetted -= OnReset;
+    }
+}

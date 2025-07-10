@@ -1,0 +1,37 @@
+﻿<g class="bus">
+    @switch (lineStyle)
+    {
+        case BusLineStyle.Straight:
+            <StraightBus x1="@x1" y1="@y1" x2="@x2" y2="@y2" stroke="@GetStroke()" />
+            break;
+        case BusLineStyle.LShape:
+            <LBus x1="@x1" y1="@y1" x2="@x2" y2="@y2" rotated="@rotated" stroke="@GetStroke()" />
+            break;
+        case BusLineStyle.SShape:
+            <SBus x1="@x1" y1="@y1" x2="@x2" y2="@y2" rotated="@rotated" stroke="@GetStroke()" />
+            break;
+        case BusLineStyle.Custom:
+            <CustomBus x1="@x1" y1="@y1" x2="@x2" y2="@y2" Waypoints="@Waypoints" stroke="@GetStroke()" />
+            break;
+    }
+</g>
+
+@code {
+    [Parameter] public int x1 { get; set; }
+    [Parameter] public int y1 { get; set; }
+    [Parameter] public int x2 { get; set; }
+    [Parameter] public int y2 { get; set; }
+    [Parameter] public BusLineStyle lineStyle { get; set; } = BusLineStyle.Straight;
+    [Parameter] public bool rotated { get; set; } = false;
+    [Parameter] public List<(int x, int y)> Waypoints { get; set; } = new();
+
+    private bool isActive = false;
+
+    private string GetStroke() { return isActive ? "red" : "black"; }
+
+    public void SetActive(bool active = true)
+    {
+        isActive = active;
+        InvokeAsync(StateHasChanged);
+    }
+}

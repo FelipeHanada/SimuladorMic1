@@ -1,0 +1,19 @@
+﻿@using System.Collections;
+@using SimuladorApp.Components.Store;
+@using Simulador.components;
+@using Simulador.mic1;
+@using Simulador.utils;
+
+<div id="controls" class="my-3">
+    <div id="controls-buttons" class="d-flex flex-wrap gap-2">
+        @* <button @onclick="() => mic1.Run()" class="btn btn-outline-secondary btn-sm px-2">Executar Tudo</button> *@
+        <button @onclick="() => mic1.StepMacro()" class="btn btn-outline-secondary btn-sm px-2">Próximo Macro Instrução</button>
+        <button @onclick="() => mic1.StepMicro()" class="btn btn-outline-secondary btn-sm px-2">Próxima Micro Instrução</button>
+        <button @onclick="() => mic1.StepCycle()" class="btn btn-outline-secondary btn-sm px-2">Próximo Ciclo</button>
+        <button @onclick="() => mic1.Reset()" class="btn btn-outline-secondary btn-sm px-2">Reset</button>
+    </div>
+</div>
+
+@code {
+    private Mic1 mic1 = Mic1Store.Instance.Mic1;
+}

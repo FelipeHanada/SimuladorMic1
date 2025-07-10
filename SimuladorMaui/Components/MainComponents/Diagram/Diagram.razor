@@ -1,0 +1,709 @@
+﻿@using System.Collections;
+@using Simulador.components;
+@using Simulador.mic1;
+@using Simulador.utils;
+@using SimuladorApp.Components.Store;
+@using SimuladorApp.Components.MainComponents.Diagram;
+@using SimuladorApp.Components.MainComponents.Diagram.Busses;
+
+<div id="diagram" class="d-flex flex-column justify-content-center align-items-center">
+    <div id="visual" class="border">
+        <svg width="800" height="600" >
+
+            <DiagramComponent displayData="@RegistersBocDD" hoverContent="false" />
+
+            @{ int yStep = 0; }
+            @foreach (KeyValuePair<DiagramComponentID, string> r in Registers.Labels)
+            {
+                registers.TryAdd(r.Key, null);
+
+                DiagramDisplayData displayData = new(
+                    RegistersDD.X,
+                    RegistersDD.Y + yStep,
+                    RegistersDD.Width,
+                    RegistersDD.Height
+                );
+
+                <DiagramComponent @ref="registers[r.Key]"
+                    label="@r.Value"
+                    displayData = "@displayData" />
+                
+                yStep += displayData.Height + RegistersYGap;
+            }
+
+            <DiagramComponent @ref="alu" displayData="@AluDD" shape="ComponentShape.Alu" label="ALU" showLabel="false" />
+            <DiagramComponent @ref="shifter" displayData="@ShifterDD" label="Shifter" />
+
+            <DiagramComponent @ref="latchA" displayData="@LatchADD" label="Latch A"/>
+            <DiagramComponent @ref="latchB" displayData="@LatchBDD" label="Latch B" />
+
+            <DiagramComponent @ref="mp" displayData="@MpDD" label="MP" hoverContent="false" />
+
+            <DiagramComponent @ref="mar" displayData="@MarDD" label="MAR" />
+            <DiagramComponent @ref="mbr" displayData="@MbrDD" label="MBR" />
+
+            <DiagramComponent @ref="amux" displayData="@AMuxDD" label="AMUX" hoverContent="false" />
+
+            @* MP - MAR *@
+            <Bus @ref="busses[BusID.MP_MAR]"
+                x1="@MpDD.Right" y1="@MarDD.MidY"
+                x2="@MarDD.Left" y2="@MarDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* MP - MBR *@
+            <Bus @ref="busses[BusID.MP_MBR]"
+                x1="@MpDD.Right"
+                y1="@MbrDD.MidY"
+                x2="@MbrDD.Left"
+                y2="@MbrDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Registradores - Latch A *@
+            <Bus @ref="busses[BusID.Reg_LatchA]"
+                x1="@RegistersBocDD.Right" y1="@(RegistersBocDD.MidY + 4)"
+                x2="@(LatchADD.MidX - 8)" y2="@LatchADD.Top"
+                lineStyle="BusLineStyle.LShape" />
+
+            @* Registradores - Latch B *@
+            <Bus @ref="busses[BusID.Reg_LatchB]"
+                x1="@RegistersBocDD.Right" y1="@(RegistersBocDD.MidY - 4)"
+                x2="@(LatchBDD.MidX - 8)" y2="@LatchBDD.Top" 
+                lineStyle="BusLineStyle.LShape" />
+
+            @* Latch A - AMUX *@
+            <Bus @ref="busses[BusID.LatchA_AMUX]"
+                x1="@LatchADD.MidX"
+                y1="@LatchADD.Bottom"
+                x2="@AMuxDD.MidX"
+                y2="@AMuxDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Latch B - ALU *@
+            <Bus @ref="busses[BusID.LatchB_ALU]"
+                x1="@LatchBDD.MidX" y1="@LatchBDD.Bottom"
+                x2="@LatchBDD.MidX" y2="@AluDD.Top" 
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Latch B - MAR *@
+            <Bus @ref="busses[BusID.LatchB_MAR]"
+                x2="@(LatchBDD.MidX - 8)" y2="@LatchBDD.Bottom"
+                x1="@MarDD.Right" y1="@(MarDD.MidY + 4)"
+                lineStyle="BusLineStyle.LShape" />
+
+            @* AMUX - ALU *@
+            <Bus @ref="busses[BusID.AMUX_ALU]"
+                x1="@AMuxDD.MidX" y1="@AMuxDD.Bottom"
+                x2="@AMuxDD.MidX" y2="@AluDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* MBR - AMUX *@
+            <Bus @ref="busses[BusID.MBR_AMUX]"
+                x1="@MbrDD.Right" y1="@MbrDD.MidY"
+                x2="@AMuxDD.Left" y2="@MbrDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* ALU - Shifter *@
+            <Bus @ref="busses[BusID.ALU_Shifter]"
+                x1="@AluDD.MidX" y1="@AluDD.Bottom"
+                x2="@ShifterDD.MidX" y2="@ShifterDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* ALU - Lógica *@
+            <Bus @ref="busses[BusID.ALU_Log]"
+                x1="@(AluDD.Right - 16)" y1="@AluDD.MidY"
+                x2="@MLogDD.Left" y2="@MLogDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Shifter - MBR *@
+            <Bus @ref="busses[BusID.Shifter_MBR]"
+                x1="@ShifterDD.Left" y1="@(ShifterDD.MidY + 4)"
+                x2="@MbrDD.MidX" y2="@MbrDD.Bottom"
+                lineStyle="BusLineStyle.LShape" />
+
+            @* Shifter - Registradores *@
+            <Bus @ref="busses[BusID.Shifter_Reg]"
+                x1="@ShifterDD.Left" y1="@(ShifterDD.MidY - 4)"
+                x2="@(RegistersBocDD.Left)" y2="@RegistersBocDD.MidY"
+                 Waypoints="@([(RegistersBocDD.Left - 16, ShifterDD.MidY - 4), (RegistersBocDD.Left - 16, RegistersBocDD.MidY)])"
+                lineStyle="BusLineStyle.Custom" />
+
+
+            @* ------------- VIA DE CONTROLE ------------- *@
+
+            <DiagramComponent @ref="mir" displayData="@MirDD" label="MIR" />
+
+            <DiagramComponent @ref="controlStore" displayData="@CmDD" label="Memória de Controle" hoverContent="false" />
+
+            <DiagramComponent @ref="mpc" displayData="@MpcDD" label="MPC" />
+
+            <DiagramComponent @ref="increment" displayData="@IncrementDD" label="+1" hoverContent="false" />
+
+            <DiagramComponent @ref="mmux" displayData="@MMuxDD" label="Mmux" />
+
+            <DiagramComponent @ref="log" displayData="@MLogDD" label="Logica" hoverContent="false" />
+
+            <DiagramComponent @ref="clock" displayData="@MClockDD" label="Clock" hoverContent="false" />
+
+            <DiagramComponent @ref="decoderC" displayData="@CDecoderDD" label="C Decoder" />
+            <DiagramComponent @ref="decoderB" displayData="@BDecoderDD" label="B Decoder" />
+            <DiagramComponent @ref="decoderA" displayData="@ADecoderDD" label="A Decoder" />
+
+            @* Decoder C - Registradores *@
+            <Bus @ref="busses[BusID.DecodC_Reg]"
+                x1="@CDecoderDD.Left" y1="@CDecoderDD.MidY"
+                x2="@(RegistersBocDD.Right)" y2="@(CDecoderDD.MidY)" 
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Decoder B - Registradores *@
+            <Bus @ref="busses[BusID.DecodB_Reg]"
+                x1="@BDecoderDD.Left" y1="@BDecoderDD.MidY"
+                x2="@RegistersBocDD.Right" y2="@BDecoderDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Decoder A - Registradores *@
+            <Bus @ref="busses[BusID.DecodA_Reg]"
+                x1="@ADecoderDD.Left" y1="@ADecoderDD.MidY"
+                x2="@RegistersBocDD.Right" y2="@ADecoderDD.MidY"
+                lineStyle="BusLineStyle.Straight" />
+            
+            @* MPC - Memória de Controle *@
+            <Bus @ref="busses[BusID.MPC_ControlStore]"
+                x1="@MpcDD.MidX" y1="@MpcDD.Bottom"
+                x2="@MpcDD.MidX" y2="@CmDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* Memória de Controle - MIR *@
+            <Bus @ref="busses[BusID.ControlStore_MIR]"
+                x1="@CmDD.MidX" y1="CmDD.Bottom"
+                x2="@MirDD.MidX" y2="MirDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* MPC - +1 *@
+            <Bus x1="@MpcDD.Left"
+                 y1="@MpcDD.MidY"
+                 x2="@IncrementDD.Right"
+                 y2="@MpcDD.MidY"
+                 lineStyle="BusLineStyle.Straight" />
+                 // Verde
+
+            @* MMux - MPC *@
+            <Bus @ref="busses[BusID.MMUX_MPC]"
+                x1="@MMuxDD.MidX" y1="@MMuxDD.Bottom"
+                x2="@MpcDD.MidX" y2="@MpcDD.Top"
+                lineStyle="BusLineStyle.Straight" />
+
+            @* MMux - +1 *@
+            <Bus x1="@MMuxDD.Left"
+                 y1="@(MMuxDD.MidY + 4)" 
+                 x2="@IncrementDD.MidX"
+                 y2="@IncrementDD.Top"
+                 lineStyle="BusLineStyle.LShape" />
+
+            @* MMux - Lógica *@
+            <Bus @ref="busses[BusID.Log_MMUX]"
+                x1="@MMuxDD.Left" y1="@(MMuxDD.MidY - 4)"
+                x2="@MLogDD.MidX" y2="@MLogDD.Top"
+                lineStyle="BusLineStyle.LShape" />
+
+            @* ---------------------------------------------------------------------------------------------------- *@
+
+            @* MIR - AMUX *@
+            <Bus @ref="busses[BusID.MIR_AMUX]"
+                 x1="@(MirDD.MidX - 48)" y1="@(MirDD.Bottom)"
+                 x2="@(AMuxDD.Right)" y2="@(AMuxDD.MidY)"
+                 Waypoints="@([(MirDD.MidX - 48, AMuxDD.MidY)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - Lógica *@
+            <Bus @ref="busses[BusID.MIR_Log]"
+                 x1="@MLogDD.Right" y1="@MLogDD.MidY"
+                 x2="@(MirDD.MidX - 40)" y2="@MirDD.Bottom"
+                 lineStyle="BusLineStyle.LShape" />
+
+            @* MIR - ALU *@
+            <Bus @ref="busses[BusID.MIR_ALU]"
+                 x1="@(MirDD.MidX - 32)" y1="@(MirDD.Bottom)"
+                 x2="@(LatchBDD.MidX + 8)" y2="@(AluDD.Top)"
+                 Waypoints="@([(MirDD.MidX - 32, MLogDD.Top - 10), (LatchBDD.MidX + 8, MLogDD.Top - 10)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - Shifter *@
+            <Bus @ref="busses[BusID.MIR_Shifter]"
+                 x1="@(ShifterDD.Right)" y1="@ShifterDD.MidY"
+                 x2="@(MirDD.MidX - 24)" y2="@MirDD.Bottom"
+                 lineStyle="BusLineStyle.LShape" />
+
+            @* MIR - MBR *@
+            <Bus @ref="busses[BusID.MIR_MBR]"
+                 x1="@(MirDD.MidX - 16)" y1="@(MirDD.Bottom)"
+                 x2="@(MbrDD.MidX - 8)" y2="@(MbrDD.Bottom)"
+                 Waypoints="@([(MirDD.MidX - 16, ShifterDD.Bottom + 24), (MbrDD.MidX - 8, ShifterDD.Bottom + 24)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - MAR *@
+            <Bus @ref="busses[BusID.MIR_MAR]"
+                 x1="@(MirDD.MidX - 8)" y1="@(MirDD.Bottom)"
+                 x2="@(MarDD.MidX)" y2="@(MarDD.Top)"
+                 Waypoints="@([(MirDD.MidX - 8, MarDD.Top - 8), (MarDD.MidX, MarDD.Top - 8)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - RD *@
+            <Bus @ref="busses[BusID.MIR_RD]"
+                x1="@(MirDD.MidX)" y1="@(MirDD.Bottom)"
+                x2="@(MpDD.MidX + 4)" y2="@(MpDD.Bottom)"
+                Waypoints="@([
+                    (MirDD.MidX, ShifterDD.Bottom + 40),
+                    (MbrDD.MidX - 14, ShifterDD.Bottom + 40),
+                    (MbrDD.MidX - 14, MbrDD.Bottom),
+                    (MbrDD.MidX - 14, ShifterDD.Bottom + 40),
+                    (MpDD.MidX + 4, ShifterDD.Bottom + 40),
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - WR *@
+            <Bus @ref="busses[BusID.MIR_WR]"
+                x1="@(MirDD.MidX + 8)" y1="@(MirDD.Bottom)"
+                x2="@(MpDD.MidX - 4)" y2="@(MpDD.Bottom)"
+                Waypoints="@([
+                    (MirDD.MidX + 8, ShifterDD.Bottom + 48),
+                    (MbrDD.MidX - 20, ShifterDD.Bottom + 48),
+                    (MbrDD.MidX - 20, MbrDD.Bottom),
+                    (MbrDD.MidX - 20, ShifterDD.Bottom + 48),
+                    (MpDD.MidX - 4, ShifterDD.Bottom + 48)])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - ENC *@
+            <Bus @ref="busses[BusID.MIR_ENC]"
+                x1="@(MirDD.MidX + 16)" y1="@(MirDD.Bottom)"
+                x2="@(CDecoderDD.Right)" y2="@(CDecoderDD.MidY - 8)"
+                Waypoints="@([
+                    (MirDD.MidX + 16, MirDD.Bottom + 48),
+                    (MirDD.MidX + 142, MirDD.Bottom + 48),
+                    (MirDD.MidX + 142, CDecoderDD.MidY - 8)])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - C Decoder *@
+            <Bus @ref="busses[BusID.MIR_DecodC]"
+                x1="@(MirDD.MidX + 24)" y1="@(MirDD.Bottom)"
+                x2="@(CDecoderDD.Right)" y2="@(CDecoderDD.MidY + 8)"
+                Waypoints="@([
+                    (MirDD.MidX + 24, MirDD.Bottom + 40),
+                    (MirDD.MidX + 124, MirDD.Bottom + 40),
+                    (MirDD.MidX + 124, CDecoderDD.MidY + 8)
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - B Decoder *@
+            <Bus @ref="busses[BusID.MIR_DecodB]"
+                x1="@(MirDD.MidX + 32)" y1="@(MirDD.Bottom)"
+                x2="@(BDecoderDD.Right)" y2="@(BDecoderDD.MidY)"
+                Waypoints="@([
+                    (MirDD.MidX + 32, MirDD.Bottom + 32),
+                    (MirDD.MidX + 108, MirDD.Bottom + 32),
+                    (MirDD.MidX + 108, BDecoderDD.MidY)
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - A Decoder *@
+            <Bus @ref="busses[BusID.MIR_DecodA]"
+                x1="@(MirDD.MidX + 40)" y1="@(MirDD.Bottom)"
+                x2="@(ADecoderDD.Right)" y2="@(ADecoderDD.MidY)"
+                Waypoints="@([
+                    (MirDD.MidX + 40, MirDD.Bottom + 24),
+                    (MirDD.MidX + 92, MirDD.Bottom + 24),
+                    (MirDD.MidX + 92, ADecoderDD.MidY)
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* MIR - MMux*@
+            <Bus @ref="busses[BusID.MIR_MMUX]" 
+                 x1="@MMuxDD.Right" y1="@(MMuxDD.MidY)"
+                 x2="@(MirDD.MidX + 48)" y2="@(MirDD.Bottom)"
+                 Waypoints="@([
+                    (MirDD.Right + 8, MMuxDD.MidY),
+                    (MirDD.Right + 8, MirDD.Bottom + 16),
+                    (MirDD.MidX + 48, MirDD.Bottom + 16)
+                    ])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* ----------------------------------------------------------------------------------------------------
+
+            @* Clock - MIR *@
+            <Bus @ref="busses[BusID.Clock_MIR]"
+                 x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 4, 5).Item2"
+                 x2="@MirDD.Left" y2="@MirDD.MidY"
+                 Waypoints="@([(MirDD.Left - 40, MClockDD.GetConector(ComponentSide.Right, 4, 5).Item2), (MirDD.Left - 40, MirDD.MidY)])"
+                 lineStyle="BusLineStyle.Custom"/>
+
+            @* Clock - Latch A *@
+            <Bus @ref="busses[BusID.Clock_LatchA]"
+                 x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 3, 5).Item2"
+                 x2="@(LatchADD.MidX + 8)" y2="@(LatchADD.Top)"
+                 Waypoints="@([(LatchADD.MidX + 12, MClockDD.GetConector(ComponentSide.Right, 3, 5).Item2), (LatchADD.MidX + 12, LatchADD.Top)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* Clock - Latch B *@
+            <Bus @ref="busses[BusID.Clock_LatchB]"
+                 x1="@MClockDD.Left" y1="MClockDD.GetConector(ComponentSide.Right, 3, 5).Item2"
+                 x2="@(LatchBDD.MidX + 8)" y2="@(LatchBDD.Top)"
+                 Waypoints="@([(LatchBDD.MidX + 12, MClockDD.GetConector(ComponentSide.Right, 3, 5).Item2), (LatchBDD.MidX + 12, LatchBDD.Top)])"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @* Clock - MAR *@
+            <Bus @ref="busses[BusID.Clock_MAR]"
+                x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 2, 5).Item2"
+                x2="@(MarDD.Right)" y2="@(MarDD.MidY - 4)"
+                Waypoints="@([
+                    (LatchBDD.Right + 8, MClockDD.GetConector(ComponentSide.Right, 2, 5).Item2),
+                    (LatchBDD.Right + 8, MarDD.MidY - 4),
+                    (MarDD.Right, MarDD.MidY - 4)
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* Clock - MBR *@
+            <Bus @ref="busses[BusID.Clock_MBR]"
+                 x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2"
+                x2="@(MbrDD.MidX)" y2="@(MbrDD.Top)"
+                Waypoints="@([
+                    (LatchBDD.Right + 32, MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2),
+                    (LatchBDD.Right + 32, MbrDD.Top - 8),
+                    (MbrDD.MidX, MbrDD.Top - 8),
+                    (MbrDD.MidX, MbrDD.Top)
+                    ])"
+                lineStyle="BusLineStyle.Custom" />
+            
+            @* Clock - MPC *@
+            <Bus @ref="busses[BusID.Clock_MPC]"
+                x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2"
+                x2="@MpcDD.Right" y2="@(MpcDD.MidY)"
+                Waypoints="@([
+                    (MClockDD.Left - 12, MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2),
+                    (MClockDD.Left - 12, MClockDD.Top - 8),
+                    (MClockDD.Right + 12, MClockDD.Top - 8),
+                    (MClockDD.Right + 12, MpcDD.MidY)])"
+                lineStyle="BusLineStyle.Custom" />
+
+            @* Clock - REG *@
+            <Bus @ref="busses[BusID.Clock_Reg]"
+                 x1="@MClockDD.Left" y1="@MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2"
+                 x2="@RegistersBocDD.Right" y2="@MClockDD.GetConector(ComponentSide.Right, 1, 5).Item2"
+                 lineStyle="BusLineStyle.Custom" />
+
+            @*<Bus x1="100" y1="100"
+                       x2="400" y2="300"
+                       Waypoints="@(new List<(int, int)>
+                                  {
+                                      (100, 200),
+                                      (250, 200),
+                                      (250, 300)
+                                  })"
+                       stroke="orange" />*@
+
+            @* <Bus x1="100" y1="100" x2="150" y2="150" />
+            <Bus x1="200" y1="100" x2="250" y2="150" lineStyle="@BusLineStyle.LShape" />
+            <Bus x1="300" y1="100" x2="350" y2="150" lineStyle="@BusLineStyle.SShape"/> *@
+        </svg>
+    </div>
+
+    <DiagramController/>
+
+</div>
+
+@code {
+    private static readonly int RegistersYGap = 3;
+    private static readonly DiagramDisplayData RegistersDD = new(210, 12, 48, 18);
+
+    private static readonly int RegistersBoxMargin = 5;
+    private static readonly DiagramDisplayData RegistersBocDD = new(
+        RegistersDD.X - RegistersBoxMargin, RegistersDD.Y - RegistersBoxMargin,
+        2 * RegistersBoxMargin + RegistersDD.Width,
+        2 * RegistersBoxMargin + RegistersDD.Height + (Registers.Labels.Count - 1) * (RegistersDD.Height + RegistersYGap)
+    );
+
+    private static readonly DiagramDisplayData AluDD = new(RegistersBocDD.Right + 16, RegistersBocDD.Bottom + 120, 112, 35);
+
+    private static readonly DiagramDisplayData LatchADD = new(
+        AluDD.GetConector(ComponentSide.Top, 1, 6).Item1, RegistersBocDD.Bottom + 18, 64, 18,
+        xAnchor: PositionAnchor.Center
+    );
+    private static readonly DiagramDisplayData LatchBDD = new(
+        AluDD.GetConector(ComponentSide.Top, 5, 6).Item1, RegistersBocDD.Bottom + 18, 64, 18,
+        xAnchor: PositionAnchor.Center
+    );
+
+    private static readonly DiagramDisplayData MpDD = new(12, LatchADD.Bottom + 12, 64, 64);
+
+    private static readonly DiagramDisplayData ShifterDD = new(AluDD.MidX, AluDD.Bottom + 18, 64, 18, xAnchor: PositionAnchor.Center);
+
+    private static readonly DiagramDisplayData MarDD = new(
+        MpDD.Right + 15,
+        MpDD.GetConector(ComponentSide.Right, 1, 4).Item2,
+        48, 18,
+        yAnchor: PositionAnchor.Center
+    );
+    private static readonly DiagramDisplayData MbrDD = new(
+        MpDD.Right + 15,
+        MpDD.GetConector(ComponentSide.Right, 3, 4).Item2,
+        48, 18,
+        yAnchor: PositionAnchor.Center
+    );
+
+    private static readonly DiagramDisplayData AMuxDD = new(
+        LatchADD.MidX, MbrDD.MidY, 48, 18,
+        xAnchor: PositionAnchor.Center, yAnchor: PositionAnchor.Center
+    );
+
+    /* --------------- VIA DE CONTROLE --------------- */
+
+    private static readonly DiagramDisplayData MClockDD = new(
+        540, 120, 48, 64
+    );
+
+    private static readonly DiagramDisplayData CmDD = new(
+        MClockDD.MidX, 270, 120, 30, xAnchor: PositionAnchor.Center
+    );
+
+    private static readonly DiagramDisplayData MirDD = new(
+        CmDD.X, CmDD.Bottom + 16, 120, 18
+    );
+
+    private static readonly DiagramDisplayData MpcDD = new(
+        CmDD.MidX, CmDD.Top - 16, 48, 18, xAnchor: PositionAnchor.Center, yAnchor: PositionAnchor.End
+    );
+
+    private static readonly DiagramDisplayData IncrementDD = new(
+        MpcDD.Left - 16, MpcDD.MidY, 48, 18, xAnchor: PositionAnchor.End, yAnchor: PositionAnchor.Center
+    );
+
+    private static readonly DiagramDisplayData MMuxDD = new(
+        MpcDD.MidX, MpcDD.Top - 16, 48, 18, xAnchor: PositionAnchor.Center, yAnchor: PositionAnchor.End
+    );
+
+    private static readonly DiagramDisplayData MLogDD = new(
+        AluDD.Right + 32, AluDD.MidY, 48, 48, yAnchor: PositionAnchor.Center
+    );
+
+    private static readonly DiagramDisplayData CDecoderDD = new(390, 4, 64, 32);
+    private static readonly DiagramDisplayData BDecoderDD = new(CDecoderDD.X, CDecoderDD.Bottom + 8, 64, 32);
+    private static readonly DiagramDisplayData ADecoderDD = new(BDecoderDD.X, BDecoderDD.Bottom + 8, 64, 32);
+
+    private DiagramComponent? alu;
+    private Dictionary<BusID, Bus?> busses = Enum
+        .GetValues(typeof(BusID))
+        .Cast<BusID>()
+        .ToDictionary(id => id, id => (Bus?)null);
+
+    private Dictionary<DiagramComponentID, DiagramComponent?> registers = Enum
+        .GetValues(typeof(DiagramComponentID))
+        .Cast<DiagramComponentID>()
+        .ToDictionary(id => id, id => (DiagramComponent?)null);
+
+    private DiagramComponent? latchA;
+    private DiagramComponent? latchB;
+    private DiagramComponent? amux;
+    private DiagramComponent? shifter;
+    private DiagramComponent? mp;
+    private DiagramComponent? mar;
+    private DiagramComponent? mbr;
+    private DiagramComponent? mir;
+    private DiagramComponent? controlStore;
+    private DiagramComponent? mpc;
+    private DiagramComponent? increment;
+    private DiagramComponent? mmux;
+    private DiagramComponent? log;
+    private DiagramComponent? clock;
+    private DiagramComponent? decoderC;
+    private DiagramComponent? decoderB;
+    private DiagramComponent? decoderA;
+
+    private Mic1 mic1 = Mic1Store.Instance.Mic1;
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            for (int i=0; i<16; i++)
+            {
+                DiagramComponent? reg = registers[Registers.RegisterIds[i]];
+                mic1.Registers[i].ControlChanged += (object? _, bool control) => { reg?.SetActive(control); };
+                mic1.Registers[i].DataChanged += (object? _, BitArray data) => {
+                    reg?.SetBinaryContent(data.ToBitString());
+                    reg?.SetDecimalContent(data.ToInt32());
+                };
+            }
+
+            mic1.Mir.Out.SignalChanged += (object? _, BitArray __) => {
+                BitArray mi = mic1.Mir.Out.Signal();
+                mir?.SetBinaryContent(mi.ToBitString());
+                mir?.SetDecimalContent(mi.ToInt32());
+
+                BitArray a = mic1.Mir.OutA.Signal();
+                decoderA.SetBinaryContent(a.ToBitString());
+                decoderA.SetDecimalContent(a.ToInt32());
+
+                BitArray b = mic1.Mir.OutB.Signal();
+                decoderB.SetBinaryContent(b.ToBitString());
+                decoderB.SetDecimalContent(b.ToInt32());
+
+                BitArray enc = mic1.Mir.OutENC.Signal();
+                BitArray c = mic1.Mir.OutC.Signal();
+                string bitString = enc.ToBitString() + c.ToBitString();
+                decoderC.SetBinaryContent(bitString);
+                decoderC.SetDecimalContent(BitArrayExtensions.FromBitString(bitString).ToInt32());
+            };
+        }
+
+        return Task.CompletedTask;
+    }
+
+    protected override void OnInitialized()
+    {
+        mic1.ControlUnit.MPc.DataChanged += (object? _, BitArray data) =>
+        {
+            mpc?.SetBinaryContent(data.ToBitString());
+            mpc?.SetDecimalContent(data.ToInt32());
+        };
+
+        mic1.Alu.Out.SignalChanged += (object? _, BitArray data) =>
+        {
+            alu?.SetBinaryContent(data.ToBitString());
+            alu?.SetDecimalContent(data.ToInt32());
+        };
+
+        mic1.Shifter.Out.SignalChanged += (object? _, BitArray data) =>
+        {
+            shifter?.SetBinaryContent(data.ToBitString());
+            shifter?.SetDecimalContent(data.ToInt32());
+        };
+
+        mic1.MbrRD.DataChanged += (object? _, BitArray data) =>
+        {
+            shifter?.SetBinaryContent(data.ToBitString());
+            shifter?.SetDecimalContent(data.ToInt32());
+        };
+        mic1.MbrWR.DataChanged += (object? _, BitArray data) =>
+        {
+            shifter?.SetBinaryContent(data.ToBitString());
+            shifter?.SetDecimalContent(data.ToInt32());
+        };
+
+        mic1.Clock.Signal(0).SignalChanged += (object? _, BitArray signal) =>
+        {
+            bool active = signal.HasAllSet();
+            busses[BusID.Clock_MIR]?.SetActive(active);
+
+            busses[BusID.MPC_ControlStore]?.SetActive(active);
+            busses[BusID.ControlStore_MIR]?.SetActive(active);
+
+            mp?.SetActive(mic1.Mir.OutRD.Signal().HasAllSet() || mic1.Mir.OutWR.Signal().HasAllSet());
+        };
+
+        mic1.Clock.Signal(1).SignalChanged += (object? _, BitArray signal) =>
+        {
+            bool active = signal.HasAllSet();
+
+            busses[BusID.Clock_LatchA]?.SetActive(active);
+            busses[BusID.Clock_LatchB]?.SetActive(active);
+            busses[BusID.Reg_LatchA]?.SetActive(active);
+            busses[BusID.Reg_LatchB]?.SetActive(active);
+
+            registers[Registers.RegisterIds[mic1.Mir.OutA.Signal().ToInt32()]]?.SetActive(active);
+            registers[Registers.RegisterIds[mic1.Mir.OutB.Signal().ToInt32()]]?.SetActive(active);
+
+            busses[BusID.MIR_DecodA]?.SetActive(active);
+            busses[BusID.MIR_DecodB]?.SetActive(active);
+            busses[BusID.DecodA_Reg]?.SetActive(active);
+            busses[BusID.DecodB_Reg]?.SetActive(active);
+
+            latchA?.SetActive(active);
+            latchB?.SetActive(active);
+        };
+
+        mic1.Clock.Signal(2).SignalChanged += (object? _, BitArray signal) =>
+        {
+            busses[BusID.Clock_MAR]?.SetActive(signal.HasAllSet());
+
+            if (mic1.Mir.OutAMux.Signal().HasAllSet())
+            {
+                busses[BusID.LatchA_AMUX]?.SetActive(false);
+                busses[BusID.MBR_AMUX]?.SetActive(signal.HasAllSet());
+            }
+            {
+                busses[BusID.LatchA_AMUX]?.SetActive(signal.HasAllSet());
+                busses[BusID.MBR_AMUX]?.SetActive(false);
+            }
+            busses[BusID.AMUX_ALU]?.SetActive(signal.HasAllSet());
+
+
+            busses[BusID.LatchB_MAR]?.SetActive(signal.HasAllSet() && mic1.Mir.OutMAR.Signal().HasAllSet());
+            mar?.SetActive(signal.HasAllSet() && mic1.Mir.OutMAR.Signal().HasAllSet());
+
+            busses[BusID.LatchB_ALU]?.SetActive(signal.HasAllSet());
+            busses[BusID.ALU_Shifter]?.SetActive(signal.HasAllSet());
+            busses[BusID.ALU_Log]?.SetActive(signal.HasAllSet());
+
+            alu?.SetActive(signal.HasAllSet());
+            shifter?.SetActive(signal.HasAllSet());
+            log?.SetActive(signal.HasAllSet());
+        };
+
+        mic1.Clock.Signal(3).SignalChanged += (object? _, BitArray signal) =>
+        {
+            busses[BusID.Clock_MBR]?.SetActive(signal.HasAllSet());
+            busses[BusID.Clock_MPC]?.SetActive(signal.HasAllSet());
+            busses[BusID.Clock_Reg]?.SetActive(signal.HasAllSet());
+            busses[BusID.Clock_DecodC]?.SetActive(signal.HasAllSet());
+
+            busses[BusID.Shifter_Reg]?.SetActive(signal.HasAllSet() && mic1.Mir.OutENC.Signal().HasAllSet());
+            busses[BusID.Shifter_MBR]?.SetActive(signal.HasAllSet() && mic1.Mir.OutMBR.Signal().HasAllSet());
+            mbr?.SetActive(signal.HasAllSet() && mic1.Mir.OutMBR.Signal().HasAllSet());
+
+            busses[BusID.Log_MMUX]?.SetActive(signal.HasAllSet());
+            mmux?.SetActive(signal.HasAllSet());
+            busses[BusID.MMUX_MPC]?.SetActive(signal.HasAllSet());
+
+            busses[BusID.MIR_DecodC]?.SetActive(signal.HasAllSet());
+            busses[BusID.DecodC_Reg]?.SetActive(signal.HasAllSet() && mic1.Mir.OutENC.Signal().HasAllSet());
+
+            DiagramComponent? reg = registers[Registers.RegisterIds[mic1.Mir.OutC.Signal().ToInt32()]];
+            reg?.SetActive(signal.HasAllSet() && mic1.Mir.OutENC.Signal().HasAllSet());
+        };
+
+        mic1.Resetted += (object? _, EventArgs __) => { mp?.SetActive(false); };
+
+        mic1.Mir.ControlChanged += (object? _, bool control) => { mir?.SetActive(control); };
+        mic1.ControlUnit.MPc.ControlChanged += (object? _, bool control) => { mpc?.SetActive(control); };
+
+        mic1.Mar.ControlChanged += (object? _, bool control) => { mar?.SetActive(control); };
+        mic1.Mar.DataChanged += (object? _, BitArray data) =>
+        {
+            mar?.SetBinaryContent(data.ToBitString());
+            mar?.SetDecimalContent(data.ToInt32());
+        };
+        mic1.MbrRD.ControlChanged += (object? _, bool control) =>
+        { 
+            mbr?.SetActive(control);
+            busses[BusID.MP_MBR]?.SetActive(control);
+        };
+        mic1.MbrRD.DataChanged += (object? _, BitArray data) =>
+        {
+            mbr?.SetBinaryContent(data.ToBitString());
+            mbr?.SetDecimalContent(data.ToInt32());
+        };
+        mic1.MbrWR.ControlChanged += (object? _, bool control) =>
+        {
+            mbr?.SetActive(control);
+        };
+        mic1.MbrWR.DataChanged += (object? _, BitArray data) =>
+        {
+            mbr?.SetBinaryContent(data.ToBitString());
+            mbr?.SetDecimalContent(data.ToInt32());
+        };
+
+        mic1.Mir.OutMAR.SignalChanged += (object? _, BitArray signal) => { busses[BusID.MIR_MAR]?.SetActive(signal.HasAllSet()); };
+        mic1.Mir.OutMBR.SignalChanged += (object? _, BitArray signal) => { busses[BusID.MIR_MBR]?.SetActive(signal.HasAllSet()); };
+        mic1.Mir.OutRD.SignalChanged += (object? _, BitArray signal) => { busses[BusID.MIR_RD]?.SetActive(signal.HasAllSet()); };
+        mic1.Mir.OutWR.SignalChanged += (object? _, BitArray signal) => { busses[BusID.MIR_WR]?.SetActive(signal.HasAllSet()); };
+        mic1.Mir.OutENC.SignalChanged += (object? _, BitArray signal) => { busses[BusID.MIR_ENC]?.SetActive(signal.HasAllSet()); };
+    }
+}

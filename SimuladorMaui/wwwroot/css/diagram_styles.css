@@ -1,0 +1,29 @@
+.component text {
+    fill: #000;
+    font-family: "Arial";
+    font-size: 12px;
+}
+
+.component rect,
+.component polygon {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 2;
+}
+
+.component.active * {
+    stroke: #ff0000 !important;
+}
+
+/*.bus line {
+    stroke: #000;
+    stroke-width: 2;
+}
+
+.active .bus line {
+    stroke-width: 3;
+}*/
+
+.component.pm text {
+    font-size: 24px;
+}
