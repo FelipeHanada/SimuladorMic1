@@ -81,3 +81,4 @@ O Simulador é foi construido em três projetos C#:
 - Clone o repositório e compile o projeto.
 - Ou baixe o projeto compilado em: <https://drive.google.com/file/d/1QzledLUGP9qD8kSGOPwESX1yGQ3WJl7-/view?usp=sharing> e execute o arquivo SimuladorApp.exe
 * o arquivo "control_store.txt" pode ser encontrado dentro de uma pasta chamada "mic1".
+* Caso a interface gráfica pareça quebrada tente aumentar ou reduzir o zoom com ctrl+'+', ctrl+'-' ou o scroll do mouse.
