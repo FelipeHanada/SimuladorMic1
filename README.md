@@ -1,7 +1,8 @@
 # Simulador de MIC-1
 Este simulador foi feito como trabalho da disciplina de Arquitetura de Computadores (TCC00286) da turma A1 ministrada por Vinod Rabello no primeiro semestre de 2025.
 Esta aplicação simula o funcionamento de uma implementação de uma arquitetura proposta por Andrew S. Tanenbaum em "Organização Estruturada de Computadores".
-Ela conta com um montador de código, tabelas de registradores e memória principal, rastreadores de instrução e microinstrução, e um diagrama dinâmico dos barramentos e componentes elétricos da microarquitetura.
+Ele conta com um montador de código, tabelas de registradores e memória principal, rastreadores de instrução e microinstrução, e um diagrama dinâmico dos barramentos e componentes elétricos da microarquitetura.
+O desenvolvimento desta aplicação foi realizado com a contribuição de [Diogo Gouveia](https://github.com/gouveiadiogo) e [Danilo Simonelli](https://github.com/danilosimonelli).
 
 
 # O Montador
@@ -81,3 +82,4 @@ O Simulador é foi construido em três projetos C#:
 - Clone o repositório e compile o projeto.
 - Ou baixe o projeto compilado em: <https://drive.google.com/file/d/1QzledLUGP9qD8kSGOPwESX1yGQ3WJl7-/view?usp=sharing> e execute o arquivo SimuladorApp.exe
 * o arquivo "control_store.txt" pode ser encontrado dentro de uma pasta chamada "mic1".
+* Caso a interface gráfica pareça quebrada tente aumentar ou reduzir o zoom com ctrl+'+', ctrl+'-' ou o scroll do mouse.
